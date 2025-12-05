@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: signApi
+  datasource:
+    url: jdbc:h2:mem:firma_db
+    driverClassName: org.h2.Driver
+    username: firma-api-user
+    password: "firma-api-password"
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/migrations/schema.sql
+      #data-locations: classpath:db/migrations/data.sql
+  h2:
+    console:
+      enabled: true
+
+server:
+  port: 8080
+
+jwt:
+  key: "Evpb079aGRSSOgMsxI7I0CqTb7m6b51R"   # parametrizar con .env: ${key_value}
+  token-duration:  10800000 # milisegundos de duracion del token (tres horas)
+
+keys-encryption:
+  secret-key: "sa4++y1mEGDTi50OolFVIHbGjtchUUJh8cNMHRZhPL8="
