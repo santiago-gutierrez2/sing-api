@@ -2,13 +2,14 @@ package com.sign.signApi.user.service;
 
 import com.sign.signApi.security.JwtUtil;
 import com.sign.signApi.security.KeyEncryptionUtil;
+import com.sign.signApi.signature.service.exceptions.KeyGenerationException;
 import com.sign.signApi.user.dao.UserDAO;
 import com.sign.signApi.user.dto.AuthResponseDTO;
 import com.sign.signApi.user.dto.SignUpAndLoginDTO;
 import com.sign.signApi.user.model.User;
 import com.sign.signApi.user.service.exceptions.InvalidCredentialsException;
 import com.sign.signApi.user.service.exceptions.UsernameAlreadyInUseException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,7 +26,7 @@ import java.util.Base64;
 
 @Service
 @Transactional
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class UserService {
     private final UserDAO userDAO;
@@ -66,9 +67,8 @@ public class UserService {
 
             return responseDTO;
         } catch (Exception e) {
-            String errorMessage = "An error occurred creating the user";
-            log.error(errorMessage, e);
-            throw new RuntimeException(errorMessage, e);
+            log.error("Error trying creating the user", e);
+            throw new KeyGenerationException("An Error occurred creating the keys for the user");
         }
     }
 

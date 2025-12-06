@@ -1,7 +1,10 @@
 package com.sign.signApi.common.web;
 
 import com.sign.signApi.common.dto.ErrorResponseDTO;
+import com.sign.signApi.signature.service.exceptions.*;
 import com.sign.signApi.user.service.exceptions.InvalidCredentialsException;
+import com.sign.signApi.user.service.exceptions.UnauthorizedException;
+import com.sign.signApi.user.service.exceptions.UserNotFoundException;
 import com.sign.signApi.user.service.exceptions.UsernameAlreadyInUseException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -58,6 +61,48 @@ public class GlobalExceptionHandler {
             UsernameAlreadyInUseException ex,
             WebRequest request) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler({
+            InvalidDocumentException.class,
+            InvalidKeyFormatException.class
+    })
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponseDTO handleBadRequestExceptions(
+            RuntimeException ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponseDTO handleUserNotFound(
+            UserNotFoundException ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponseDTO handleUnauthorized(
+            UnauthorizedException ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler({
+            KeyNotFoundException.class,
+            KeyDecryptionException.class,
+            SignatureOperationException.class
+    })
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponseDTO handleSignatureInternalErrors(
+            RuntimeException ex, WebRequest request) {
+        log.error("Document signature error: {}", ex.getMessage());
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(KeyGenerationException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponseDTO handleKeyGen(KeyGenerationException ex, WebRequest req) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), req);
     }
 
     @ExceptionHandler(Exception.class)

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HexFormat;
 
 
 @Component
@@ -24,7 +25,8 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        this.singinKey = Keys.hmacShaKeyFor(keyValue.getBytes());
+        byte[] keyBytes = HexFormat.of().parseHex(keyValue);
+        singinKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateToken(String username) {
@@ -41,7 +43,7 @@ public class JwtUtil {
 
     public String extractUsername(String token) {
         try {
-            return Jwts.parserBuilder().setSigningKey(keyValue).build().parseClaimsJws(token).getBody().getSubject();
+            return Jwts.parserBuilder().setSigningKey(singinKey).build().parseClaimsJws(token).getBody().getSubject();
         } catch (JwtException e) {
             return null;
         }
@@ -50,7 +52,7 @@ public class JwtUtil {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(keyValue).build().parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(singinKey).build().parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
             return false;

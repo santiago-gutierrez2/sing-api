@@ -23,7 +23,7 @@ server:
   port: 8080
 
 jwt:
-  key: "Evpb079aGRSSOgMsxI7I0CqTb7m6b51R"   # parametrizar con .env: ${key_value}
+  key: "f6332ceddb722c99dda6c31deb6162a8a7042937f03b69d04da115dd244bd9d1"   # parametrizar con .env: ${key_value}
   token-duration:  10800000 # milisegundos de duracion del token (tres horas)
 
 keys-encryption:
