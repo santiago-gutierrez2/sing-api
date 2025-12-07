@@ -4,6 +4,8 @@ import com.sign.signApi.common.exceptions.ApiException;
 import com.sign.signApi.security.KeyEncryptionUtil;
 import com.sign.signApi.signature.dto.DocumentToSignDTO;
 import com.sign.signApi.signature.dto.SignatureOfDocumentDTO;
+import com.sign.signApi.signature.dto.VerificationResultDTO;
+import com.sign.signApi.signature.dto.VerifySignatureDTO;
 import com.sign.signApi.signature.service.exceptions.*;
 import com.sign.signApi.user.dao.UserDAO;
 import com.sign.signApi.user.model.User;
@@ -17,12 +19,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
-import java.security.PrivateKey;
-import java.security.Signature;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 @Service
@@ -92,6 +92,53 @@ public class SignatureService {
         } catch (Exception e) {
             log.error("Unexpected error during document signing", e);
             throw new SignatureOperationException("Unexpected error during signing");
+        }
+    }
+
+    public VerificationResultDTO verifySignature(VerifySignatureDTO verifySignatureDTO) {
+        try {
+            User user = userDAO.findById(verifySignatureDTO.getUserId())
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+            PublicKey publicKey;
+            try {
+                byte[] publicKeyBytes = Base64.getDecoder().decode(user.getPublicKey());
+                X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
+                KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                publicKey = keyFactory.generatePublic(keySpec);
+            } catch (GeneralSecurityException | IllegalArgumentException e) {
+                log.error("Invalid public key format");
+                throw new InvalidKeyFormatException("Invalid public key format");
+            }
+
+            byte[] documentBytes;
+            byte[] signatureBytes;
+            try {
+                documentBytes = Base64.getDecoder().decode(verifySignatureDTO.getDocumentBase64());
+                signatureBytes = Base64.getDecoder().decode(verifySignatureDTO.getSignatureBase64());
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid document/signature Base64");
+                throw new InvalidDocumentException("Invalid document/signature Base64");
+            }
+
+            boolean isValid = false;
+            try {
+                Signature signature = Signature.getInstance("SHA256withRSA");
+                signature.initVerify(publicKey);
+                signature.update(documentBytes);
+                isValid = signature.verify(signatureBytes);
+            } catch (Exception e) {
+                log.error("Signature verification failed", e);
+                throw new SignatureVerificationException("Signature verification failed");
+            }
+
+            return new VerificationResultDTO(isValid);
+
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error during signature verification", e);
+            throw new SignatureOperationException("Unexpected error during signature verification");
         }
     }
 }

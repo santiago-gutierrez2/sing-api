@@ -10,5 +10,6 @@ public class SignUpAndLoginDTO {
     @Size(max = 50, message = "Username cannot be longer than 50 characters")
     private String username;
     @NotBlank(message = "Password cannot be empty")
+    @Size(min = 4, message = "Password must be longer than 3 characters")
     private String password;
 }
